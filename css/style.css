@@ -151,11 +151,6 @@ table tr:nth-child(odd) {
     height: 75vh;
 }
 
-#chart {
-    height: 100vh;
-    /*padding: 24px;*/
-}
-
 #chart2 {
     padding-bottom: 24rem;
     height: 100vh;

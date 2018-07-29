@@ -1,3 +1,4 @@
+// current highlight selection
 let currentSelection = {
 	field: "",
 	value: ""
@@ -15,11 +16,11 @@ const height = 600 - margin.top - margin.bottom;
 const chartHeight = 480;
 const leftPadding = 48;
 
-let xScale = d3.scale.ordinal().rangeRoundBands([leftPadding, width - leftPadding], .1, .5);	// 0.1 colonne tra uno e l'altro, 0.5 colonne vuote agli estremi
-let yScale = d3.scale.linear().range([chartHeight, 1]);	// 1 is the axis line stroke width
+// let xScale = d3.scale.ordinal().rangeRoundBands([leftPadding, width - leftPadding], .1, .5);	// 0.1 colonne tra uno e l'altro, 0.5 colonne vuote agli estremi
+// let yScale = d3.scale.linear().range([chartHeight - xLabelsPadding, 1]);	// 1 is the axis line stroke width
 
-let xAxis = d3.svg.axis().scale(xScale).orient("bottom");
-let yAxis = d3.svg.axis().scale(yScale).orient("left");
+// let xAxis = d3.svg.axis().scale(xScale).orient("bottom");
+// let yAxis = d3.svg.axis().scale(yScale).orient("left");
 
 let svg = d3.select("#chart")
 	.append("g")
@@ -30,29 +31,38 @@ let resultCache = {
 	data: []
 };
 
+let highlightCache = {
+	field: "",
+	data: []
+};
+
 /**
- * chiamata quando scegli un dato da visualizzare, chiama a sua volta la richiesta ajax
+ * helper function
  */
-function refreshChart() {
-
-	let selection = d3.select("#menu")[0][0].value;
-	let spinner = $("#limit")[0];
-	let limit = parseInt(spinner.value);	// prendi il nome del campo su cui aggregare
-	let sortDescending = $("#sort")[0].checked;
-
-	if (selection === "ora") {
-		spinner.value = 24;
-		limit = 24;
-	} else if (selection === "mese") {
-		spinner.value = 12;
-		limit = 12;
-	} else if (selection === "giorno") {
-		spinner.value = 31;
-		limit = 31;
-	} else if (limit < 1) {
-		limit = 1;
+function getTextWidth(text, fontSize, fontFace) {
+	if (fontSize === undefined) {
+		fontSize = 16;
 	}
-	getCount(selection, limit, sortDescending);
+	if (fontFace === undefined) {
+		fontFace = "Arial";
+	}
+	let canvas = document.createElement('canvas');
+	let context = canvas.getContext('2d');
+	context.font = fontSize + 'px ' + fontFace;
+	let result = context.measureText(text).width;
+	// console.log(result);
+	return result;
+}
+
+/**
+ * helper function
+ */
+function getMaxTextWidth(list) {
+	let max = 0;
+	for (let i = 0; i < list.length; i++) {
+		max = Math.max(getTextWidth(list[i]), max);
+	}
+	return max;
 }
 
 /**
@@ -60,20 +70,41 @@ function refreshChart() {
  */
 function drawChart(dataset) {
 
+	// select chart and clear it
 	let svg = d3.select("#chart");
+	svg.html("");
 
-	xScale.domain(dataset.map(function (d) {
-		return d['_id'];					// assegna il dominio x alle label
+	let xLabelsPadding = getMaxTextWidth(dataset.map(d => {
+		return d['_id']
 	}));
 
-	yScale.domain([0, d3.max(dataset,
-		function (d) {
-			return d['count'];	// dominio y ai valori count
-		}
-	)]);
-	svg.html("");		// cancella eventuali chart precedenti
+	let xScale = d3.scale
+		.ordinal()
+		.rangeRoundBands([leftPadding, $("#chart").width() - leftPadding], .1, .5)	// 0.1 colonne tra uno e l'altro, 0.5 colonne vuote agli estremi
+		.domain(dataset.map(function (d) {
+			return d['_id'];					// assegna il dominio x alle label
+		}));
+	let xAxis = d3.svg.axis()
+		.scale(xScale)
+		.orient("bottom");
+
+	let yScale = d3.scale
+		.linear()
+		.range([chartHeight, 1])	// 1 is the axis line stroke width
+		.domain([0, d3.max(dataset,
+			function (d) {
+				return d['count'];	// dominio y ai valori count
+			}
+		)]);
+	let yAxis = d3.svg.axis()
+		.scale(yScale)
+		.orient("left");
 
 	// asse x
+	svg.attr("viewBox", "0 0 100vw 100vh")
+		.attr("max-height", "calc(" + (chartHeight + xLabelsPadding) + " + 2em)")
+		.attr("height", "calc(" + (chartHeight + xLabelsPadding) + " + 2em)");
+
 	svg.append("g")
 		.attr("class", "axis")
 		.attr("id", "x_axis")
@@ -97,10 +128,7 @@ function drawChart(dataset) {
 		.attr("transform", "translate(" + (2 * leftPadding) + ",0)")	// don't know why times 2 is exactly right
 		.append("text")
 		.attr("x", "" + (-leftPadding))
-		.attr("y", chartHeight + 16)	// 16 is about 1em, wont bother trying to convert mixed css units to pixels
-		// .attr("dy", ".71em")
-		// .attr("transform", "rotate(-90, 48, " + 0 + ")")	// TODO: find the correct formula to rotate around center of first letter
-		// .style("text-anchor", "end")
+		.attr("y", chartHeight + 24)	// 24 is about 1em, cannot use css calc() here
 		.text("Count");
 
 	// barre sull'asse x
@@ -117,7 +145,7 @@ function drawChart(dataset) {
 			return yScale(d['count']);
 		})
 		.attr("height", function (d) {
-			return chartHeight - yScale(d.count) - 1;	// 1 is the line stroke width
+			return Math.max(chartHeight - 1 - yScale(d.count), 0);	// -1 is the line stroke width
 		})
 		.append("svg:title")
 		.text(function (d) {
@@ -128,56 +156,6 @@ function drawChart(dataset) {
 	d3.selectAll(".bar").on("click", highLightItem);
 }
 
-/**
- * La funzione che gestisce la transizione durante il sorting
- */
-
-/*
-function change() {
-	// TODO: throw away this and implement server-side sorting via url parameter
-
-	dataset = resultCache.data;
-	let svg = d3.select("#maing");
-
-	// Copy-on-write since tweens are evaluated after a
-	// delay.
-	let x0 = xScale.domain(
-		dataset.sort(						// sort dei valori
-			d3.select("#sort")[0][0].checked ? function (a, b) {		// se e' checked...
-				return b.count - a.count;		// ordini per count
-			} : function (a, b) {				//... altrimenti
-				return d3.ascending(a['_id'], b['_id']);	// ordini per id (alfabetico)
-			})
-			.map(function (d) {
-				return d['_id'];
-			})).copy();
-	svg.selectAll(".bar").sort(function (a, b) {		// sort delle barre
-		return x0(a['_id']) - x0(b['_id']);
-	});
-	let transition = svg.transition().duration(500);		// transizione
-	let delay = function (d, i) {
-		return i * 50;
-	};
-	transition.selectAll(".bar")
-		.delay(delay)
-		.attr("x", function (d) {
-			return x0(d['_id']);	// delay sulla transizione delle barre
-		});
-	transition.select("#x_axis")
-		.call(xAxis)
-		.selectAll("g")
-		.delay(delay);	// delay per la transizione delle thick sull'asse x
-
-	// d3.select("#x_axis")
-	// 	.selectAll("g")
-	// 	.selectAll("text")
-	// 	.attr("y", "0") // non lo fa.
-	// 	.attr("dx", "-1em")// verticale
-	// 	.attr("dy", "-.5em") // orizzontale, non toccare
-	// 	.attr("transform", "rotate(-90)")
-	// 	.style("text-anchor", "end");	// riconfigura il testo altrimenti finisce a meta' dell'asse x
-}
-*/
 /**
  * Funzione che gestisce la selezione di una colonna per l'highlight
  * @param d i dati della colonna: _id e value
@@ -202,41 +180,12 @@ function highLightItem(d, i) {
 }
 
 /**
- * refresh la seconda chart
- */
-function refreshHighlightChart() {
-
-	let fieldName = d3.select("#menu2")[0][0].value;
-
-	let limit = d3.select("#limit2")[0][0].value;	// prendi il nome del campo su cui aggregare
-	if (limit <= 0 || limit >= 100) {
-		alert("invalid limit!");	// should never happen
-	}
-	if (fieldName !== "") {
-		if (fieldName === "ora") {
-			d3.select("#limit2")[0][0].value = 24;
-			limit = 24;
-		}
-		if (fieldName === "mese") {
-			d3.select("#limit2")[0][0].value = 12;
-			limit = 12;
-		}
-		if (fieldName === "giorno") {
-			d3.select("#limit2")[0][0].value = 31;
-			limit = 31;
-		}
-		d3.select("#highlight-label").html("Visualizzo <strong>" + fieldName + "</strong> evidenziando gli incidenti in cui <strong>" + currentSelection.field + "=" + currentSelection.value + "</strong>");
-		getCountWithHighlight(fieldName, limit);
-	}
-}
-
-/**
  * disegna sulla seconda chart gli highlights
  * @param result risultati
  * @param normalized booleano, true se i dati devono essere normalizzati
  */
-function drawHighlightChart(result, normalized) {
-
+function drawHighlightChart(result) {
+	let normalized = $("#normalizeHighlight")[0].checked;
 	// create canvas
 	d3.select("#chart2").html("");
 	// d3.select("#highlight-div")[0][0].style.display = "";		// mostra la seconda chart
@@ -258,6 +207,10 @@ function drawHighlightChart(result, normalized) {
 
 	// Transpose the data into layers by cause.
 	let layers = d3.layout.stack();
+
+	for (let i = 0; i < result.length; i++) {
+		result[i]['count'] -= result[i]['highlight'];
+	}
 
 	let func = function (valueType) {
 		return result.map(function (d) {
@@ -365,6 +318,59 @@ function drawHighlightChart(result, normalized) {
 }
 
 /**
+ * chiamata quando scegli un dato da visualizzare, chiama a sua volta la richiesta ajax
+ */
+function refreshChart() {
+
+	let selection = d3.select("#menu")[0][0].value;
+	let spinner = $("#limit")[0];
+	let limit = parseInt(spinner.value);	// prendi il nome del campo su cui aggregare
+	let sortDescending = $("#sort1")[0].checked;
+
+	if (selection === "ora") {
+		spinner.value = 24;
+		limit = 24;
+	} else if (selection === "mese") {
+		spinner.value = 12;
+		limit = 12;
+	} else if (selection === "giorno") {
+		spinner.value = 31;
+		limit = 31;
+	} else if (limit < 1) {
+		limit = 1;
+	}
+	getCount(selection, limit, sortDescending);
+}
+
+/**
+ * refresh la seconda chart
+ */
+function refreshHighlightChart() {
+
+	let fieldName = $("#menu2")[0].value;
+
+	let spinner = $("#limit2")[0];	// prendi il nome del campo su cui aggregare
+	let limit = parseInt(spinner.value);	// prendi il nome del campo su cui aggregare
+	let sortDescending = $("#sort2")[0].checked;
+	if (fieldName !== "") {
+		if (fieldName === "ora") {
+			spinner.value = 24;
+			limit = 24;
+		}
+		if (fieldName === "mese") {
+			spinner.value = 12;
+			limit = 12;
+		}
+		if (fieldName === "giorno") {
+			spinner.value = 31;
+			limit = 31;
+		}
+		d3.select("#highlight-label").html("Visualizzo <strong>" + fieldName + "</strong> evidenziando gli incidenti in cui <strong>" + currentSelection.field + "=" + currentSelection.value + "</strong>");
+		getCountWithHighlight(fieldName, limit, sortDescending);
+	}
+}
+
+/**
  * legge i dati dal database e chiama la funzione di popolamento della chart passandogli il risultato.
  */
 function getCount(field, limit, sortDescending) {
@@ -377,7 +383,7 @@ function getCount(field, limit, sortDescending) {
 	};
 
 	if (field === resultCache.field && limit <= resultCache.data.length) {
-		drawChart(resultCache.data.slice(0, limit).sort(sortFunction));
+		drawChart(resultCache.data.sort(sortFunction).slice(0, limit));
 	} else {
 		$.ajax({
 			type: 'GET',
@@ -399,23 +405,36 @@ function getCount(field, limit, sortDescending) {
 /**
  * legge i dati dal database e chiama la funzione di popolamento della chart passandogli il risultato.
  */
-function getCountWithHighlight(field, limit) {
-	$.ajax({
-		type: 'GET',
-		url: config.backendUrl + "/GetCountWithHighlight?field=" + field + "&limit=" + limit + "&highlight-field=" + currentSelection.field + "&highlight-value=" + currentSelection.value,
-		dataType: 'json',
-		success: function (result) {
-			for (let i = 0; i < result.length; i++) {
-				result[i].count -= result[i]['highlight'];
-			}
-			resultCache.data = result;
-			drawHighlightChart(result, false);
-			// TODO: manage ajax requests (debounce, set order?)
-			// TODO: make 'normalized' a ractive checkbox
-		},
-		error: function (result) {
-			alert("Error in retrieving data from the database.");
-			console.error("Error in retrieving data from the database.", result);
+function getCountWithHighlight(field, limit, sortDescending) {
+	let sortFunction = function (a, b) {
+		let result = a.count - b.count;
+		if (sortDescending === true) {
+			result = result * -1;
 		}
-	});
+		return result;
+	};
+
+	if (field === highlightCache.field && limit <= highlightCache.data.length) {
+		drawHighlightChart(highlightCache.data.sort(sortFunction).slice(0, limit));
+	} else {
+		// highlightCache
+		$.ajax({
+			type: 'GET',
+			url: config.backendUrl + "/GetCountWithHighlight?field=" + field + "&limit=" + limit + "&highlight-field=" + currentSelection.field + "&highlight-value=" + currentSelection.value,
+			dataType: 'json',
+			success: function (result) {
+				highlightCache.field = field;
+				highlightCache.data = result;
+				drawHighlightChart(result.sort(sortFunction).slice(0, limit));
+			},
+			error: function (result) {
+				alert("Error retrieving data");
+				console.error("Error retrieving data", result);
+			}
+		});
+	}
 }
+
+$(document).ready(function () {
+	refreshChart()
+});

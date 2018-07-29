@@ -23,6 +23,12 @@ Finally it was cleaned and persisted on a MongoDB collection to be used by this 
 2. Deploy the contents of this project on a webserver
 3. Connect to the webserver index.html. That's it.
 
+##### run in a container
+
+The app can also run in a docker container:
+
+	docker run -it --rm -p 80:80 -v"$(pwd)":/usr/share/nginx/html nginx:alpine
+
 ### Usage
 
 ##### statistics
