@@ -4,36 +4,21 @@ let currentSelection = {
 	value: ""
 };
 
-const margin = {
-	top: 20,
-	// right: 20,
-	bottom: 20,
-	left: 20
-};
-const width = 1100;// - margin.left - margin.right;
-const height = 600 - margin.top - margin.bottom;
-
-const chartHeight = 480;
+const chartHeight = 320;
 const leftPadding = 48;
-
-// let xScale = d3.scale.ordinal().rangeRoundBands([leftPadding, width - leftPadding], .1, .5);	// 0.1 colonne tra uno e l'altro, 0.5 colonne vuote agli estremi
-// let yScale = d3.scale.linear().range([chartHeight - xLabelsPadding, 1]);	// 1 is the axis line stroke width
-
-// let xAxis = d3.svg.axis().scale(xScale).orient("bottom");
-// let yAxis = d3.svg.axis().scale(yScale).orient("left");
-
-let svg = d3.select("#chart")
-	.append("g")
-	.attr("id", "maing");
 
 let resultCache = {
 	field: "",
-	data: []
+	data: [],
+	sortDescending: true
 };
 
 let highlightCache = {
+	highlightField: "",
+	highlightValue: "",
 	field: "",
-	data: []
+	data: [],
+	sortDescending: true
 };
 
 /**
@@ -70,13 +55,15 @@ function getMaxTextWidth(list) {
  */
 function drawChart(dataset) {
 
-	// select chart and clear it
-	let svg = d3.select("#chart");
-	svg.html("");
-
 	let xLabelsPadding = getMaxTextWidth(dataset.map(d => {
 		return d['_id']
 	}));
+
+	// select chart and clear it
+	let svg = d3.select("#chart").attr("viewBox", "0 0 100vw 100vh")
+		.attr("max-height", "calc(" + (chartHeight + xLabelsPadding) + " + 2em)")
+		.attr("height", "calc(" + (chartHeight + xLabelsPadding) + " + 2em)")
+		.html("");
 
 	let xScale = d3.scale
 		.ordinal()
@@ -101,25 +88,16 @@ function drawChart(dataset) {
 		.orient("left");
 
 	// asse x
-	svg.attr("viewBox", "0 0 100vw 100vh")
-		.attr("max-height", "calc(" + (chartHeight + xLabelsPadding) + " + 2em)")
-		.attr("height", "calc(" + (chartHeight + xLabelsPadding) + " + 2em)");
-
 	svg.append("g")
 		.attr("class", "axis")
-		.attr("id", "x_axis")
-		.attr("transform", "translate(" + leftPadding + "," + (chartHeight) + ")")
 		.call(xAxis)
+		.attr("transform", "translate(" + leftPadding + "," + (chartHeight) + ")")
 		.selectAll("text")
 		.style("text-anchor", "end")
-		.attr("dx", "-.7em")	//-.7em
+		.attr("dx", "-.75em")	//-.75em
 		.attr("dy", ".15em")	//.15em
 		.attr("y", "0")	// non ne vuole sapere
-		.attr("transform", "rotate(-90)")
-		.append("svg:title")
-		.text(function (d) {
-			return d;
-		});
+		.attr("transform", "rotate(-90)");
 
 	// asse y
 	svg.append("g")
@@ -145,11 +123,11 @@ function drawChart(dataset) {
 			return yScale(d['count']);
 		})
 		.attr("height", function (d) {
-			return Math.max(chartHeight - 1 - yScale(d.count), 0);	// -1 is the line stroke width
+			return Math.max(chartHeight - 1 - yScale(d['count']), 0);	// -1 is the line stroke width
 		})
 		.append("svg:title")
 		.text(function (d) {
-			return d['_id'] + ": " + d.count;
+			return d['_id'] + ": " + d['count'];
 		});
 
 	// listener per l'highlight cliccando su una barra
@@ -181,139 +159,125 @@ function highLightItem(d, i) {
 
 /**
  * disegna sulla seconda chart gli highlights
- * @param result risultati
+ * @param dataset risultati
  * @param normalized booleano, true se i dati devono essere normalizzati
  */
-function drawHighlightChart(result) {
-	let normalized = $("#normalizeHighlight")[0].checked;
-	// create canvas
-	d3.select("#chart2").html("");
-	// d3.select("#highlight-div")[0][0].style.display = "";		// mostra la seconda chart
-	$("#highlight-div").show();
-	// let width2 = 960;
-	// let height2 = 600;
-	// let margin = [20, 50, 30, 20];
+function drawHighlightChart(dataset, normalized) {
 
-	let x = d3.scale.ordinal().rangeRoundBands([0, width /*- margin.right*/ - margin.left]);	// originale
-	let y = d3.scale.linear().range([0, height - margin.top - margin.bottom]);
-	let z = d3.scale.ordinal().range(["lightblue", "red"]);
-
-	let chart2 = d3.select("#chart2")
-	// .attr("width", width)
-	// .attr("height", height)
-		.append("svg:g")
-		.attr("id", "stackg")
-		.attr("transform", "translate(" + margin.top + "," + (height - margin.bottom) + ")");
-
-	// Transpose the data into layers by cause.
-	let layers = d3.layout.stack();
-
-	for (let i = 0; i < result.length; i++) {
-		result[i]['count'] -= result[i]['highlight'];
-	}
-
-	let func = function (valueType) {
-		return result.map(function (d) {
-			return {
-				x: d['_id'],
-				y: +d[valueType]
-			};
-		});
-	};
-
-	if (normalized) {
-		// Transpose the data into layers by cause.
-		layers = layers.offset('expand')(["count", "highlight"].map(func));
-	} else {
-		layers = layers(["count", "highlight"].map(func));
-	}
-
-	// Compute the x-domain (by id) and y-domain (by top).
-	x.domain(layers[0].map(function (d) {
-		return d.x;
+	let xLabelsPadding = getMaxTextWidth(dataset.map(d => {
+		return d['_id']
 	}));
-	y.domain([0, d3.max(layers[layers.length - 1], function (d) {
-		return d.y0 + d.y;
-	})]);
 
-	// Add a group for each cause.
-	let cause = chart2.selectAll("g.cause")
-		.data(layers)
-		.enter().append("svg:g")
-		.attr("class", "cause")
-		.style("fill", function (d, i) {
-			return z(i);
-		})
-		.style("stroke", function (d, i) {
-			return d3.rgb(z(i)).darker();
-		});
+	// select chart and clear it
+	let svg = d3.select("#chart2").attr("viewBox", "0 0 100vw 100vh")
+		.attr("max-height", "calc(" + (chartHeight + xLabelsPadding) + " + 2em)")
+		.attr("height", "calc(" + (chartHeight + xLabelsPadding) + " + 2em)")
+		.html("");
 
-	// Add a rect for each date.
-	cause.selectAll("rect")
-		.data(Object)
+	$("#highlight-div").show();	// show the chart
+
+	let layers = d3.layout.stack();
+	if (normalized) {
+		layers = layers.offset('expand');
+	}
+	layers = layers(["count", "highlight"].map(
+		function (valueType) {
+			return dataset.map(function (d) {
+				return {
+					id: d['_id'],
+					y: +d[valueType]
+				};
+			});
+		}));
+
+	let xScale = d3.scale
+		.ordinal()
+		.rangeRoundBands([leftPadding, $("#chart2").width() - leftPadding], .1, .5)
+		.domain(layers[0].map(function (d) {
+			return d['id'];	// map x axis to id field of first layer (same labels)
+		}));
+	let xAxis = d3.svg.axis()
+		.scale(xScale)
+		.orient("bottom");
+
+	let yScale = d3.scale
+		.linear()
+		.range([chartHeight, 1])
+		.domain([0, d3.max(layers[layers.length - 1], function (d) {
+			return d.y0 + d.y;	// d.y0 + d.y = total count
+		})]);
+	let yAxis = d3.svg.axis()
+		.scale(yScale)
+		.orient("left");
+
+	// asse x
+	svg.append("g")
+		.attr("class", "chart-axis")
+		.call(xAxis)
+		.attr("transform", "translate(" + leftPadding + "," + (chartHeight) + ")")
+		.selectAll("text")
+		.style("text-anchor", "end")
+		.attr("dx", "-.7em")	//-.7em
+		.attr("dy", ".15em")	//.15em
+		.attr("y", "0")	// non ne vuole sapere
+		.attr("transform", "rotate(-90)");
+
+	// asse y
+	svg.append("g")
+		.attr("class", "chart-axis")
+		.call(yAxis)
+		.attr("transform", "translate(" + (2 * leftPadding) + ",0)")	// don't know why times 2 is exactly right
+		.append("text")
+		.attr("x", "" + (-leftPadding))
+		.attr("y", chartHeight + 24)	// 24 is about 1em, cannot use css calc() here
+		.text("Count");
+
+	// base color
+	svg.append("g")
+		.selectAll(".base-bar")
+		.data(layers[0])
 		.enter()
-		.append("svg:rect")
+		.append("rect")
+		.attr("class", "base-bar")
+		.style("fill", "steelblue")
+		.style("stroke", d3.rgb("steelblue").darker())
 		.attr("x", function (d) {
-			return x(d.x);
+			return xScale(d['id']) + leftPadding; // posizione barre x: xScale(d.id)
 		})
+		.attr("width", xScale.rangeBand())
 		.attr("y", function (d) {
-			return -y(d.y0) - y(d.y);
+			return yScale(d.y);
 		})
 		.attr("height", function (d) {
-			return y(d.y);
+			return Math.max(chartHeight - 1 - yScale(d.y), 0);	// -1 is the line stroke width
 		})
-		.attr("width", x.rangeBand())
 		.append("svg:title")
 		.text(function (d) {
-			return d.x + ": " + d.y0 + ": " + d.y;
+			return d['id'] + ": " + d.y;
 		});
 
-	// Add a label per date.
-	chart2.selectAll(".rule text")
-		.data(x.domain())
+	// highlight color
+	svg
+		.selectAll(".highlight-bar")
+		.data(layers[1])
 		.enter()
-		.append("svg:text")
-		.attr("x", "-1")
-		.attr("dx", "0")
+		.append("rect")
+		.attr("class", "highlight-bar")
+		.style("fill", "red")
+		.style("stroke", d3.rgb("red").darker())
+		.attr("x", function (d) {
+			return xScale(d['id']) + leftPadding; // posizione barre x: xScale(d.id)
+		})
+		.attr("width", xScale.rangeBand())
 		.attr("y", function (d) {
-			return -x(d) / 1.95;
+			return yScale(d.y0 + d.y);
 		})
-		.attr("dy", function (d) {
-			return -x(d) / 1.95;
-		})
-		.attr("transform", "rotate(90)")
-		.text(function (d) {
-			return d;
+		.attr("height", function (d) {
+			return Math.max(chartHeight - 1 - yScale(d.y), 0);	// -1 is the line stroke width
 		})
 		.append("svg:title")
 		.text(function (d) {
-			return d;
-		});
-
-	// Add y-axis rules.
-	let rule = chart2.selectAll("g.rule")
-		.data(y.ticks(5))
-		.enter().append("svg:g")
-		.attr("class", "rule")
-		.attr("transform", function (d) {
-			return "translate(0," + -y(d) + ")";
-		});
-
-	rule.append("svg:line")
-		.attr("x2", width /*- margin.right*/ - margin.top)
-		.style("stroke", function (d) {
-			return d ? "#fff" : "#000";
-		})
-		.style("stroke-opacity", function (d) {
-			return d ? .7 : null;
-		});
-
-	rule.append("svg:text")
-		.style("text-anchor", "end")
-		.attr("x", width - margin.top)
-		.attr("dy", ".35em")
-		.text(function (d) {
-			return d;
+			return d['id'] + " (highlight): " + d.y;
 		});
 }
 
@@ -352,21 +316,22 @@ function refreshHighlightChart() {
 	let spinner = $("#limit2")[0];	// prendi il nome del campo su cui aggregare
 	let limit = parseInt(spinner.value);	// prendi il nome del campo su cui aggregare
 	let sortDescending = $("#sort2")[0].checked;
+	let normalized = $("#normalizeHighlight")[0].checked;
+
 	if (fieldName !== "") {
-		if (fieldName === "ora") {
+		if (fieldName === "ora" && spinner.value > 24) {
 			spinner.value = 24;
 			limit = 24;
 		}
-		if (fieldName === "mese") {
+		if (fieldName === "mese" && spinner.value > 12) {
 			spinner.value = 12;
 			limit = 12;
 		}
-		if (fieldName === "giorno") {
+		if (fieldName === "giorno" && spinner.value > 31) {
 			spinner.value = 31;
 			limit = 31;
 		}
-		d3.select("#highlight-label").html("Visualizzo <strong>" + fieldName + "</strong> evidenziando gli incidenti in cui <strong>" + currentSelection.field + "=" + currentSelection.value + "</strong>");
-		getCountWithHighlight(fieldName, limit, sortDescending);
+		getCountWithHighlight(fieldName, currentSelection.field, currentSelection.value, limit, sortDescending, normalized);
 	}
 }
 
@@ -405,27 +370,44 @@ function getCount(field, limit, sortDescending) {
 /**
  * legge i dati dal database e chiama la funzione di popolamento della chart passandogli il risultato.
  */
-function getCountWithHighlight(field, limit, sortDescending) {
-	let sortFunction = function (a, b) {
-		let result = a.count - b.count;
+function getCountWithHighlight(field, highlightField, highlightValue, limit, sortDescending, normalized) {
+	function sortFunction(a, b) {
+		let result =
+			((a['count'] + a['highlight']) * 10)
+			- ((b['count'] + b['highlight']) * 10);
+		if (result === 0) {
+			result = a['highlight'] - b['highlight'];
+		}
 		if (sortDescending === true) {
 			result = result * -1;
 		}
 		return result;
-	};
+	}
 
-	if (field === highlightCache.field && limit <= highlightCache.data.length) {
-		drawHighlightChart(highlightCache.data.sort(sortFunction).slice(0, limit));
+	if (field === highlightCache.field
+		&& highlightCache.highlightField === currentSelection.field
+		&& highlightCache.highlightValue === currentSelection.value
+		&& sortDescending === highlightCache.sortDescending
+		&& limit <= highlightCache.data.length) {
+		drawHighlightChart(highlightCache.data.sort(sortFunction).slice(0, limit), normalized);
 	} else {
-		// highlightCache
 		$.ajax({
 			type: 'GET',
-			url: config.backendUrl + "/GetCountWithHighlight?field=" + field + "&limit=" + limit + "&highlight-field=" + currentSelection.field + "&highlight-value=" + currentSelection.value,
+			url: config.backendUrl + "/GetCountWithHighlight?field=" + field
+				+ "&highlight-field=" + highlightField
+				+ "&highlight-value=" + highlightValue
+				+ "&sort=" + (sortDescending ? "desc" : "asc")
+				+ "&limit=" + limit,
 			dataType: 'json',
 			success: function (result) {
 				highlightCache.field = field;
+				highlightCache.highlightField = currentSelection.field;
+				highlightCache.highlightValue = currentSelection.value;
 				highlightCache.data = result;
-				drawHighlightChart(result.sort(sortFunction).slice(0, limit));
+				highlightCache.sortDescending = sortDescending;
+				drawHighlightChart(result.sort(sortFunction), normalized);
+				d3.select("#highlight-label")
+					.html("evidenziando gli incidenti in cui <strong>" + highlightField + " = " + highlightValue + "</strong>");
 			},
 			error: function (result) {
 				alert("Error retrieving data");

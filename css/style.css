@@ -23,6 +23,15 @@ table tr:nth-child(odd) {
     /* used as selector */
 }
 
+/* d3 charts style */
+
+path,
+.chart-axis line {
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges;
+}
+
 /* districts map */
 
 #map-canvas {
@@ -131,27 +140,9 @@ table tr:nth-child(odd) {
     fill: #300000
 }
 
-/* time chart */
+/* time graph */
 
-.axis path,
-.axis line {
-    fill: none;
-    stroke: #000000;
-    shape-rendering: crispEdges;
-}
-
-.line {
-    fill: none;
-    stroke: steelblue;
-    stroke-width: 1px;
-}
-
-#chart-div {
+#timechart-div {
     width: 90vw;
     height: 75vh;
-}
-
-#chart2 {
-    padding-bottom: 24rem;
-    height: 100vh;
 }

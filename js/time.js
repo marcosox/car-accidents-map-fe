@@ -109,7 +109,7 @@ function refreshCalendar(result) {
  */
 function refreshChart(result) {
 	// Set the dimensions of the canvas / graph
-	let container = $(`#chart-div`);
+	let container = $(`#timechart-div`);
 	let width = Math.max(container.width(), 1100);
 	let height = Math.max(container.height(), 240);
 	const xAxisHeight = 30;
@@ -142,13 +142,12 @@ function refreshChart(result) {
 		});
 
 	// Adds the svg canvas
-	let svg = d3.select("#chart-div")
+	let svg = d3.select("#timechart-div")
 		.append("svg")
 		.attr("width", '100%')
 		.attr("height", '100%')
 		.attr('viewBox', '0 0 ' + (Math.min(width, height) + xAxisHeight) + ' ' + (Math.min(width, height) + yAxisWidth))
 		.attr('preserveAspectRatio', 'xMinYMax');
-
 	// Map the data
 	result.forEach(function (d) {
 		d.data = parseDate(d.data);
@@ -168,18 +167,18 @@ function refreshChart(result) {
 
 	// Add the valueline path.
 	svg.append("path")
-		.attr("class", "line")
+		.style("stroke", "steelblue")	// override the css default black
 		.attr("d", valueline(result));
 
 	// Add the X Axis
 	svg.append("g")
-		.attr("class", "axis")
+		.attr("class", "chart-axis")
 		.attr("transform", "translate(0," + height + ")")
 		.call(xAxis);
 
 	// Add the Y Axis
 	svg.append("g")
-		.attr("class", "axis")
+		.attr("class", "chart-axis")
 		.attr("transform", "translate(" + yAxisWidth + ",0)")
 		.call(yAxis);
 }
