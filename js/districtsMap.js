@@ -1,4 +1,4 @@
-let municipi = {};
+let districtsData = {};
 let districtsMap;
 let districtsMapLayer;
 let districtsPopup;
@@ -15,9 +15,9 @@ function clearDistrictsMap() {
  * resetta i conteggi degli incidenti
  */
 function resetDistrictsValues() {
-	for (let i = 0; i < municipi.length; i++) {
-		municipi[i]['incidenti'] = 0;
-		municipi[i]['totale'] = 0;
+	for (let i = 0; i < districtsData.length; i++) {
+		districtsData[i]['incidenti'] = 0;
+		districtsData[i]['totale'] = 0;
 	}
 }
 
@@ -87,7 +87,7 @@ function getDistricts() {
 		dataType: 'json',
 		success: function (result) {
 			result.forEach(function (district) {
-				municipi["" + district['numero']] = district;
+				districtsData["" + district['numero']] = district;
 			});
 			getDistrictsAccidents(); // mostra gli incidenti subito
 		},
@@ -191,9 +191,9 @@ function getDistrictsAccidents() {
 			let max = 0;	// maximum number of accidents in a district for the selected timeframe
 			for (let i = 0; i < result.length; i++) { // aggiungi conteggi
 				const districtAccidents = result[i];
-				if (municipi["" + districtAccidents['municipio']] !== undefined) {
-					municipi["" + districtAccidents['municipio']]['incidenti'] = districtAccidents["incidenti"];
-					municipi["" + districtAccidents['municipio']]['totale'] = districtAccidents["totale"];
+				if (districtsData["" + districtAccidents['municipio']] !== undefined) {
+					districtsData["" + districtAccidents['municipio']]['incidenti'] = districtAccidents["incidenti"];
+					districtsData["" + districtAccidents['municipio']]['totale'] = districtAccidents["totale"];
 					max = Math.max(max, districtAccidents["incidenti"]);
 				} else {
 					console.warn("skipping data for missing district. coordinates are missing for district " + districtAccidents['municipio']);
@@ -203,8 +203,8 @@ function getDistrictsAccidents() {
 
 			result.forEach(function (district) {
 				const districtNumber = district['municipio'];
-				if (municipi[districtNumber] !== undefined && municipi[districtNumber]['incidenti'] !== 0) {
-					drawDistrict(municipi[districtNumber], tipo, max);
+				if (districtsData[districtNumber] !== undefined && districtsData[districtNumber]['incidenti'] !== 0) {
+					drawDistrict(districtsData[districtNumber], tipo, max);
 				}
 			});
 		},

@@ -1,5 +1,5 @@
 // current highlight selection
-let currentSelection = {
+let barchartSelection = {
 	field: "",
 	value: ""
 };
@@ -7,18 +7,19 @@ let currentSelection = {
 const chartHeight = 320;
 const leftPadding = 48;
 
-let resultCache = {
-	field: "",
-	data: [],
-	sortDescending: true
-};
-
-let highlightCache = {
-	highlightField: "",
-	highlightValue: "",
-	field: "",
-	data: [],
-	sortDescending: true
+let barchartCache = {
+	barchart: {
+		field: "",
+		data: [],
+		sortDescending: true
+	},
+	highlight: {
+		highlightField: "",
+		highlightValue: "",
+		field: "",
+		data: [],
+		sortDescending: true
+	}
 };
 
 /**
@@ -140,8 +141,8 @@ function drawBarChart(dataset) {
 function highlightBarChartItem(d, i) {
 	if (this.style.fill !== "") {	// se clicchi su una gia' scelta, viene cancellata la selezione
 		this.style.fill = "";
-		currentSelection.field = "";
-		currentSelection.value = "";
+		barchartSelection.field = "";
+		barchartSelection.value = "";
 		d3.select("#highlight-div")[0][0].style.display = "none";	// nasconde la seconda chart
 	} else {	//altrimenti evidenzia la barra scelta
 		d3.selectAll(".bar")[0].forEach(function (d) {
@@ -149,8 +150,8 @@ function highlightBarChartItem(d, i) {
 		});	// resetta il colore di tutte le barre
 		this.style.fill = "red";	// evidenzia quella selezionata di rosso
 		// salva le variabili necessarie
-		currentSelection.field = d3.select("#menu")[0][0].value;
-		currentSelection.value = d['_id'];
+		barchartSelection.field = d3.select("#menu")[0][0].value;
+		barchartSelection.value = d['_id'];
 		refreshHighlightChart();
 	}
 }
@@ -329,7 +330,7 @@ function refreshHighlightChart() {
 			spinner.value = 31;
 			limit = 31;
 		}
-		getHighlightCount(fieldName, currentSelection.field, currentSelection.value, limit, sortDescending, normalized);
+		getHighlightCount(fieldName, barchartSelection.field, barchartSelection.value, limit, sortDescending, normalized);
 	}
 }
 
@@ -345,16 +346,16 @@ function getBarChartCount(field, limit, sortDescending) {
 		return result;
 	};
 
-	if (field === resultCache.field && limit <= resultCache.data.length) {
-		drawBarChart(resultCache.data.sort(sortFunction).slice(0, limit));
+	if (field === barchartCache.barchart.field && limit <= barchartCache.barchart.data.length) {
+		drawBarChart(barchartCache.barchart.data.sort(sortFunction).slice(0, limit));
 	} else {
 		$.ajax({
 			type: 'GET',
 			url: config.backendUrl + "/GetCount?field=" + field + "&limit=" + limit,
 			dataType: 'json',
 			success: function (result) {
-				resultCache.field = field;
-				resultCache.data = result;
+				barchartCache.barchart.field = field;
+				barchartCache.barchart.data = result;
 				drawBarChart(result.slice(0, limit).sort(sortFunction));
 			},
 			error: function (result) {
@@ -382,12 +383,12 @@ function getHighlightCount(field, highlightField, highlightValue, limit, sortDes
 		return result;
 	}
 
-	if (field === highlightCache.field
-		&& highlightCache.highlightField === currentSelection.field
-		&& highlightCache.highlightValue === currentSelection.value
-		&& sortDescending === highlightCache.sortDescending
-		&& limit <= highlightCache.data.length) {
-		drawHighlightChart(highlightCache.data.sort(sortFunction).slice(0, limit), normalized);
+	if (field === barchartCache.highlight.field
+		&& barchartCache.highlight.highlightField === barchartSelection.field
+		&& barchartCache.highlight.highlightValue === barchartSelection.value
+		&& sortDescending === barchartCache.highlight.sortDescending
+		&& limit <= barchartCache.highlight.data.length) {
+		drawHighlightChart(barchartCache.highlight.data.sort(sortFunction).slice(0, limit), normalized);
 	} else {
 		$.ajax({
 			type: 'GET',
@@ -398,11 +399,11 @@ function getHighlightCount(field, highlightField, highlightValue, limit, sortDes
 				+ "&limit=" + limit,
 			dataType: 'json',
 			success: function (result) {
-				highlightCache.field = field;
-				highlightCache.highlightField = currentSelection.field;
-				highlightCache.highlightValue = currentSelection.value;
-				highlightCache.data = result;
-				highlightCache.sortDescending = sortDescending;
+				barchartCache.highlight.field = field;
+				barchartCache.highlight.highlightField = barchartSelection.field;
+				barchartCache.highlight.highlightValue = barchartSelection.value;
+				barchartCache.highlight.data = result;
+				barchartCache.highlight.sortDescending = sortDescending;
 				drawHighlightChart(result.sort(sortFunction), normalized);
 				d3.select("#highlight-label")
 					.html("evidenziando gli incidenti in cui <strong>" + highlightField + " = " + highlightValue + "</strong>");
