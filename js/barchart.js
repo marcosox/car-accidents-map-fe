@@ -34,9 +34,7 @@ function getTextWidth(text, fontSize, fontFace) {
 	let canvas = document.createElement('canvas');
 	let context = canvas.getContext('2d');
 	context.font = fontSize + 'px ' + fontFace;
-	let result = context.measureText(text).width;
-	// console.log(result);
-	return result;
+	return context.measureText(text).width;
 }
 
 /**
@@ -53,7 +51,7 @@ function getMaxTextWidth(list) {
 /**
  * Disegna sulla chart i dati passati con il parametro result
  */
-function drawChart(dataset) {
+function drawBarChart(dataset) {
 
 	let xLabelsPadding = getMaxTextWidth(dataset.map(d => {
 		return d['_id']
@@ -131,7 +129,7 @@ function drawChart(dataset) {
 		});
 
 	// listener per l'highlight cliccando su una barra
-	d3.selectAll(".bar").on("click", highLightItem);
+	d3.selectAll(".bar").on("click", highlightBarChartItem);
 }
 
 /**
@@ -139,7 +137,7 @@ function drawChart(dataset) {
  * @param d i dati della colonna: _id e value
  * @param i l'indice della colonna nella selezione
  */
-function highLightItem(d, i) {
+function highlightBarChartItem(d, i) {
 	if (this.style.fill !== "") {	// se clicchi su una gia' scelta, viene cancellata la selezione
 		this.style.fill = "";
 		currentSelection.field = "";
@@ -284,7 +282,7 @@ function drawHighlightChart(dataset, normalized) {
 /**
  * chiamata quando scegli un dato da visualizzare, chiama a sua volta la richiesta ajax
  */
-function refreshChart() {
+function refreshBarChart() {
 
 	let selection = d3.select("#menu")[0][0].value;
 	let spinner = $("#limit")[0];
@@ -303,7 +301,7 @@ function refreshChart() {
 	} else if (limit < 1) {
 		limit = 1;
 	}
-	getCount(selection, limit, sortDescending);
+	getBarChartCount(selection, limit, sortDescending);
 }
 
 /**
@@ -331,14 +329,14 @@ function refreshHighlightChart() {
 			spinner.value = 31;
 			limit = 31;
 		}
-		getCountWithHighlight(fieldName, currentSelection.field, currentSelection.value, limit, sortDescending, normalized);
+		getHighlightCount(fieldName, currentSelection.field, currentSelection.value, limit, sortDescending, normalized);
 	}
 }
 
 /**
  * legge i dati dal database e chiama la funzione di popolamento della chart passandogli il risultato.
  */
-function getCount(field, limit, sortDescending) {
+function getBarChartCount(field, limit, sortDescending) {
 	let sortFunction = function (a, b) {
 		let result = a.count - b.count;
 		if (sortDescending === true) {
@@ -348,7 +346,7 @@ function getCount(field, limit, sortDescending) {
 	};
 
 	if (field === resultCache.field && limit <= resultCache.data.length) {
-		drawChart(resultCache.data.sort(sortFunction).slice(0, limit));
+		drawBarChart(resultCache.data.sort(sortFunction).slice(0, limit));
 	} else {
 		$.ajax({
 			type: 'GET',
@@ -357,7 +355,7 @@ function getCount(field, limit, sortDescending) {
 			success: function (result) {
 				resultCache.field = field;
 				resultCache.data = result;
-				drawChart(result.slice(0, limit).sort(sortFunction));
+				drawBarChart(result.slice(0, limit).sort(sortFunction));
 			},
 			error: function (result) {
 				alert("Error retrieving data");
@@ -370,7 +368,7 @@ function getCount(field, limit, sortDescending) {
 /**
  * legge i dati dal database e chiama la funzione di popolamento della chart passandogli il risultato.
  */
-function getCountWithHighlight(field, highlightField, highlightValue, limit, sortDescending, normalized) {
+function getHighlightCount(field, highlightField, highlightValue, limit, sortDescending, normalized) {
 	function sortFunction(a, b) {
 		let result =
 			((a['count'] + a['highlight']) * 10)
@@ -416,7 +414,3 @@ function getCountWithHighlight(field, highlightField, highlightValue, limit, sor
 		});
 	}
 }
-
-$(document).ready(function () {
-	refreshChart()
-});

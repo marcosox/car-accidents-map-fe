@@ -14,6 +14,30 @@
 	<link href="css/style.css" rel="stylesheet">
 </head>
 <body>
+
+<!-- Bootstrap core JavaScript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"
+		crossorigin="anonymous"></script>
+<script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery-slim.min.js"><\/script>')</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+		integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+		crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/js/bootstrap.min.js"
+		integrity="sha384-o+RDsa0aLu++PJvFqy8fFScvbHFLtbvScb8AjopnFD+iEQ7wo/CG0xlczd+2O/em"
+		crossorigin="anonymous"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+<script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.1.3/build/ol.js"></script>
+
+<script src="js/config.js"></script>
+<script src="js/stats.js"></script>
+<script src="js/time.js"></script>
+<script src="js/barchart.js"></script>
+<script src="js/districtsMap.js"></script>
+<script src="js/map_geo.js"></script>
+
 <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
 	<a class="navbar-brand" href="index.htm">Visualizzazione Incidenti</a>
 	<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault"
@@ -24,25 +48,25 @@
 	<div class="collapse navbar-collapse" id="navbarsExampleDefault">
 		<ul class="navbar-nav mr-auto">
 			<li class="nav-item">
-				<a class="nav-link" href="#" onclick="$('main').load('html/stats.htm');">Statistics</a>
+				<a class="nav-link" href="#" onclick="$('main').load('html/stats.html');">Statistics</a>
 			</li>
 			<li class="nav-item">
-				<a class="nav-link" href="#" onclick="$('main').load('html/time.htm');">Time graph</a>
+				<a class="nav-link" href="#" onclick="$('main').load('html/time.html');">Time graph</a>
 			</li>
 			<li class="nav-item">
-				<a class="nav-link" href="#" onclick="$('main').load('html/barchart.htm');">Histogram</a>
+				<a class="nav-link" href="#" onclick="$('main').load('html/barchart.html');">Histogram</a>
 			</li>
 			<li class="nav-item dropdown">
 				<a class="nav-link dropdown-toggle" href="#" id="dropdown01" data-toggle="dropdown"
 				   aria-haspopup="true" aria-expanded="false">Maps</a>
 				<div class="dropdown-menu" aria-labelledby="dropdown01">
-					<a class="dropdown-item" href="#" onclick="$('main').load('html/map_mun.htm');">Districts</a>
-					<a class="dropdown-item" href="#" onclick="$('main').load('html/map_geo.htm');">Accidents</a>
+					<a class="dropdown-item" href="#" onclick="$('main').load('html/districtsMap.html');">Districts</a>
+					<a class="dropdown-item" href="#" onclick="$('main').load('html/map_geo.html');">Accidents</a>
 				</div>
 			</li>
 			<li class="nav-item">
 				<a class="nav-link" href="#"
-									onclick="$('main').load('html/about.htm');">About</a></li>
+									onclick="$('main').load('html/about.html');">About</a></li>
 		</ul>
 	</div>
 </nav>
@@ -57,22 +81,5 @@
 
 </main>
 
-<script src="js/config.js"></script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
-
-
-<!-- Bootstrap core JavaScript
-================================================== -->
-<!-- Placed at the end of the document so the pages load faster -->
-<script src="https://code.jquery.com/jquery-3.3.1.min.js"
-		crossorigin="anonymous"></script>
-<script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery-slim.min.js"><\/script>')</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
-		integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
-		crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/js/bootstrap.min.js"
-		integrity="sha384-o+RDsa0aLu++PJvFqy8fFScvbHFLtbvScb8AjopnFD+iEQ7wo/CG0xlczd+2O/em"
-		crossorigin="anonymous"></script>
 </body>
 </html>

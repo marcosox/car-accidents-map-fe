@@ -11,7 +11,7 @@
 	Select the data you want to be displayed. Click on a column to show its highlights chart.
 </p>
 <div class="w-100 h-100">
-	<select name="menu" id="menu" onchange="refreshChart()">
+	<select id="menu" onchange="refreshBarChart()">
 		<option value="anno">Incidenti per anno</option>
 		<option value="mese">Incidenti per mese dell'anno</option>
 		<option value="giorno">Incidenti per giorno del mese</option>
@@ -26,15 +26,15 @@
 		<option value="persone.sesso">Persone coinvolte per genere</option>
 	</select>
 	<br>
-	<label>Limit results to <input type="number" min="1" value="20" name="limit" id="limit"
-								   onchange="refreshChart()"> elements.</label><br>
-	<label><input type="checkbox" id="sort1" checked onChange="refreshChart()"> Sort descending</label><br>
+	<label>Limit results to <input type="number" min="1" value="20" id="limit"
+								   onchange="refreshBarChart()"> elements.</label><br>
+	<label><input type="checkbox" id="sort1" checked onChange="refreshBarChart()"> Sort descending</label><br>
 	<svg id="chart" max-width="100%" width="auto"></svg>
 </div>
 <hr>
 <div style="display:none" id="highlight-div" class="w-100 h-100">
 	<p>Visualizzo
-		<select name="menu2" id="menu2" onchange="refreshHighlightChart()">
+		<select id="menu2" onchange="refreshHighlightChart()">
 			<option value="veicoli.tipo">Tipologie di veicoli</option>
 			<option value="veicoli.brand">Marche di veicoli coinvolte</option>
 			<option value="veicoli.model">Modelli di veicoli coinvolti</option>
@@ -50,13 +50,15 @@
 		</select>
 		<span id="highlight-label"></span>
 	</p>
-	<label>Limit results to <input type="number" min="1" value="20" name="limit2" id="limit2"
+	<label>Limit results to <input type="number" min="1" value="20" id="limit2"
 								   onchange="refreshHighlightChart();"> elements.</label><br>
 	<label><input type="checkbox" id="sort2" checked onChange="refreshHighlightChart()"> Sort descending</label><br>
 	<input type="checkbox" id="normalizeHighlight" onchange="refreshHighlightChart()">Normalize Graph
 	<br>
 	<svg id="chart2" class="w-100 pt-4"></svg>
-	<script src="js/barchart.js"></script>
 </div>
+<script>
+	refreshBarChart();
+</script>
 </body>
 </html>

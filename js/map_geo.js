@@ -1,12 +1,12 @@
 let dataset = null;
-let map;
+let accidentsMap;
 let currentMarker = null; // marker cliccato
 let infoWindows = []; // in realta' ce ne dovrebbe essere una sola alla volta
 // qui dentro
 const markers = [];
 
-function initMap() {
-	map = new google.maps.Map(document.getElementById('mapgeo-canvas'), {
+function initAccidentsMap() {
+	accidentsMap = new google.maps.Map(document.getElementById('mapgeo-canvas'), {
 		zoom: 11,
 		center: {
 			lat: 41.893,
@@ -65,7 +65,7 @@ function getItemDetails(accidentId) {
 	});
 };
 
-function clearMap() {
+function clearAccidentsMap() {
 	for (let i = 0; i < markers.length; i++) {
 		markers[i].setMap(null);
 	}
@@ -78,7 +78,7 @@ function filtraIncidenti() {
 	const daytime = document.getElementById("daytime").value;
 	over = '<div id="overlay"><img src="../img/loading_spinner.gif" class="ajax-loader"></div>';
 	$(over).appendTo('main');
-	clearMap();
+	clearAccidentsMap();
 
 	for (i = 0; i < dataset.length; i++) {
 
@@ -90,7 +90,7 @@ function filtraIncidenti() {
 					lat: +dataset[i].lat,
 					lng: +dataset[i].lon
 				},
-				map: map,
+				map: accidentsMap,
 				title: "Incidente n." + dataset[i].protocollo,
 				icon: {
 					path: myCircle,
@@ -130,7 +130,7 @@ function filtraIncidenti() {
 					}
 					contentString += "</div>";
 					infowindow.setContent(contentString);
-					infowindow.open(map, this);
+					infowindow.open(accidentsMap, this);
 					infoWindows.push(infowindow);
 				}
 			});

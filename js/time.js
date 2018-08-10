@@ -107,7 +107,7 @@ function refreshCalendar(result) {
 /**
  * disegna la line chart
  */
-function refreshChart(result) {
+function refreshTimeChart(result) {
 	// Set the dimensions of the canvas / graph
 	let container = $(`#timechart-div`);
 	let width = Math.max(container.width(), 1100);
@@ -186,14 +186,14 @@ function refreshChart(result) {
 /**
  * Ottiene i totali giornalieri dal database
  */
-function getCounts() {
+function getTimeCounts() {
 	$.ajax({
 		type: 'GET',
 		url: config.backendUrl + "/GetDailyAccidents",
 		dataType: 'json',
 		success: function (result) {
 			refreshCalendar(result);
-			refreshChart(result);
+			refreshTimeChart(result);
 		},
 		error: function (result) {
 			alert("Error retrieving data.");
@@ -201,5 +201,3 @@ function getCounts() {
 		}
 	});
 }
-
-$(document).ready(getCounts());

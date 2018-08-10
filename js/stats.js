@@ -8,14 +8,14 @@ function getDBStats() {
 		url: config.backendUrl + "/GetTotals",
 		dataType: 'json',
 		success: function (result) {
-			$("#veicoli").text(result['veicoli']);
-			$("#incidenti").text(result['incidenti']);
-			$("#persone").text(result['persone']);
-			$("#strade").text(result['strade']);
+			$("#stats-veicoli").text(result['veicoli']);
+			$("#stats-incidenti").text(result['incidenti']);
+			$("#stats-persone").text(result['persone']);
+			$("#stats-strade").text(result['strade']);
 			const mediaVeicoli = parseFloat(Math.round((result['veicoli'] / result['incidenti']) * 10000) / 10000).toFixed(4);
 			const mediaPersone = parseFloat(Math.round((result['persone'] / result['incidenti']) * 10000) / 10000).toFixed(4);
-			$("#mediaVeicoli").text(mediaVeicoli);
-			$("#mediaPersone").text(mediaPersone);
+			$("#stats-mediaVeicoli").text(mediaVeicoli);
+			$("#stats-mediaPersone").text(mediaPersone);
 		},
 		error: function (result) {
 			console.error(result);
@@ -23,5 +23,3 @@ function getDBStats() {
 		}
 	});
 }
-
-$(document).ready(getDBStats());

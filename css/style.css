@@ -34,10 +34,6 @@ path,
 
 /* districts map */
 
-#map-canvas {
-    height: 75vh;
-}
-
 /* accidents map */
 
 #mapgeo-canvas {
@@ -50,11 +46,6 @@ path,
 #mapgeo_container {
     width: 100%;
     height: 600px;
-}
-
-#dash {
-    width: 100%;
-    height: 50px;
 }
 
 #overlay {

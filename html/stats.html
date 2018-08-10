@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Statistiche</title>
+</head>
+<body>
+<h1>Dataset overview</h1><br>
+<div style="text-align: left;">
+	<table>
+		<tr>
+			<td class="text-left"> Incidenti totali</td>
+			<td class="px-2 loading-spinner-enabled" id="stats-incidenti"><img height="24px" src="img/loading_spinner.gif"></td>
+		</tr>
+		<tr>
+			<td class="text-left"> Strade</td>
+			<td class="px-2 loading-spinner-enabled" id="stats-strade"><img height="24px" src="img/loading_spinner.gif"></td>
+		</tr>
+		<tr>
+			<td class="text-left"> Persone coinvolte</td>
+			<td class="px-2 loading-spinner-enabled" id="stats-persone"><img height="24px" src="img/loading_spinner.gif"></td>
+		</tr>
+		<tr>
+			<td class="text-left"> Veicoli</td>
+			<td class="px-2 loading-spinner-enabled" id="stats-veicoli"><img height="24px" src="img/loading_spinner.gif"></td>
+		</tr>
+		<tr>
+			<td class="text-left"> Media veicoli per incidente</td>
+			<td class="px-2 loading-spinner-enabled" id="stats-mediaVeicoli"><img height="24px" src="img/loading_spinner.gif"></td>
+		</tr>
+		<tr>
+			<td class="text-left"> Media persone per incidente</td>
+			<td class="px-2 loading-spinner-enabled" id="stats-mediaPersone"><img height="24px" src="img/loading_spinner.gif"></td>
+		</tr>
+	</table>
+	<button type="button" class="btn btn-link" onclick="getDBStats()">Refresh</button>
+</div>
+<script>
+	getDBStats();
+</script>
+</body>
+</html>
