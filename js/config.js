@@ -28,3 +28,13 @@ function percent2color(percent) {
 	// Return a CSS HSL string
 	return 'hsl(' + c + ', 100%, 50%)';
 }
+
+function removeSpinner() {
+	$(".loading").hide();
+	$(".ol-viewport").show();
+}
+
+function showSpinner() {
+	$(".loading").show();
+	$(".ol-viewport").hide();
+}

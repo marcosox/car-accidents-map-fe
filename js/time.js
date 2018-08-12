@@ -22,7 +22,7 @@ function refreshCalendar(result) {
 					return percent2color(d * (100 / colorQuantization));
 				}));
 
-	// crea i riquadri annuali
+	// year elements
 	let div = d3.select("#calendar-div");
 	div.html("");
 	const rowSpacing = 5;
@@ -34,7 +34,7 @@ function refreshCalendar(result) {
 		.append("g")
 		.attr("transform", "translate(50," + rowSpacing + ")");
 
-	// label con l'anno
+	// year labels
 	svg.append("text")
 		.attr("transform", "translate(-6," + cellSize * 3.5 + ")rotate(-90)")
 		.style("text-anchor", "middle")
@@ -42,7 +42,7 @@ function refreshCalendar(result) {
 			return d;
 		});
 
-	// giorni
+	// days
 	let rect = svg.selectAll(".day")
 		.data(function (d) {
 			return d3.time.days(new Date(d, 0, 1), new Date(d + 1, 0, 1));
@@ -62,7 +62,7 @@ function refreshCalendar(result) {
 		return d;
 	});
 
-	// disegna i mesi
+	// months
 	svg.selectAll(".month")
 		.data(function (d) {
 			return d3.time.months(new Date(d, 0, 1), new Date(d + 1, 0, 1));

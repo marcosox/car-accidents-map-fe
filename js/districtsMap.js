@@ -7,7 +7,6 @@ let districtsPopup;
  * pulisce la mappa dai poligoni
  */
 function clearDistrictsMap() {
-	// closeAllInfoWindows();
 	districtsMapLayer.getSource().clear();
 }
 
@@ -66,7 +65,6 @@ function initDistrictsMap() {
 	});
 	districtsMap.addInteraction(select);
 	select.on('select', function (evt) {
-		console.log("selected", evt.selected);
 		if (evt.selected.length > 0) {
 			const feature = evt.selected[0];
 			$("#districts-popup-content")[0].innerHTML = feature.get("popupContent");
@@ -75,12 +73,14 @@ function initDistrictsMap() {
 			districtsPopup.setPosition(undefined);
 		}
 	});
+	$(".loading").hide();
 }
 
 /**
  * Retrieves districts coordinates from backend
  */
 function getDistricts() {
+	showSpinner();
 	$.ajax({
 		type: 'GET',
 		url: config.backendUrl + "/Municipi",
@@ -95,6 +95,9 @@ function getDistricts() {
 			showDistrictsErrorBox("Error retrieving districts");
 			console.error(result);
 		},
+		complete: function (result) {
+			removeSpinner();
+		}
 	});
 }
 
@@ -102,10 +105,9 @@ function getDistricts() {
  * disegna i municipi cliccabili
  *
  * @param district
- * @param tipo
  * @param maximumCount maximum number of accidents in a district for the selected timeframe
  */
-function drawDistrict(district, tipo, maximumCount) {
+function drawDistrict(district, maximumCount) {
 
 	// convert coordinates
 	const coordinates = district['coord'].map(function convert(coordinate) {
@@ -154,40 +156,30 @@ function clearDistrictsErrorBox() {
  * Carica e mostra gli incidenti
  */
 function getDistrictsAccidents() {
-
-	const anno = $("#districts-year").val();
-	const mese = $("#districts-month").val();
-	const giorno = $("#districts-day").val();
-	const ora = $("#districts-hour").val();
-	let tipo = 1;
-
-	if (anno.length > 0) {
-		if (mese.length > 0 && giorno.length === 0)
-			tipo = 2;
-		else if (mese.length > 0 && giorno.length > 0)
-			tipo = 3;
-	} else if (anno.length === 0) {
-		if (mese.length > 0 && giorno.length > 0)
-			tipo = 2;
-	}
-
+	showSpinner();
 	$.ajax({
 		type: 'GET',
-		url: config.backendUrl + "/GetIncidentiMunicipi?anno=" + anno + "&mese=" + mese + "&giorno=" + giorno + "&ora=" + ora,
+		url: config.backendUrl + "/GetIncidentiMunicipi?"
+			+ "anno=" + $("#districts-year").val()
+			+ "&mese=" + $("#districts-month").val()
+			+ "&giorno=" + $("#districts-day").val()
+			+ "&ora=" + $("#districts-hour").val(),
 		success: function (result) {
 			result.sort(function (a, b) {
 				return (a['municipio'] - b['municipio']);
 			});
+
+			resetDistrictsValues();
+			districtsPopup.setPosition(undefined);
+			clearDistrictsMap();
+
 			if (result.length === 0) {
 				showDistrictsErrorBox("Nessun incidente nel periodo selezionato.");
-				clearDistrictsMap();
-				// resetDistrictsValues();
 				return;
 			}
 			clearDistrictsErrorBox();
-			resetDistrictsValues();
-			districtsPopup.setPosition(undefined);
 
+			// merge ajax result with district objects
 			let max = 0;	// maximum number of accidents in a district for the selected timeframe
 			for (let i = 0; i < result.length; i++) { // aggiungi conteggi
 				const districtAccidents = result[i];
@@ -199,18 +191,20 @@ function getDistrictsAccidents() {
 					console.warn("skipping data for missing district. coordinates are missing for district " + districtAccidents['municipio']);
 				}
 			}
-			clearDistrictsMap();
 
+			// draw district polygons
 			result.forEach(function (district) {
 				const districtNumber = district['municipio'];
 				if (districtsData[districtNumber] !== undefined && districtsData[districtNumber]['incidenti'] !== 0) {
-					drawDistrict(districtsData[districtNumber], tipo, max);
+					drawDistrict(districtsData[districtNumber], max);
 				}
 			});
+			removeSpinner();
 		},
 		error: function (result) {
 			showDistrictsErrorBox("Error retrieving data");
 			console.error("Error retrieving data", result);
+			removeSpinner();
 		},
 	});
 }

@@ -164,7 +164,7 @@ function highlightBarChartItem(d, i) {
 function drawHighlightChart(dataset, normalized) {
 
 	let xLabelsPadding = getMaxTextWidth(dataset.map(d => {
-		return d['_id']
+		return d['_id'];
 	}));
 
 	// select chart and clear it
@@ -406,7 +406,7 @@ function getHighlightCount(field, highlightField, highlightValue, limit, sortDes
 				barchartCache.highlight.sortDescending = sortDescending;
 				drawHighlightChart(result.sort(sortFunction), normalized);
 				d3.select("#highlight-label")
-					.html("evidenziando gli incidenti in cui <strong>" + highlightField + " = " + highlightValue + "</strong>");
+					.html("evidenziando gli incidenti in cui si verifica la condizione <strong>" + highlightField + " = " + highlightValue + "</strong>");
 			},
 			error: function (result) {
 				alert("Error retrieving data");
